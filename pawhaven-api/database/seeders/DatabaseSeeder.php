@@ -15,7 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        User::factory()->admin()->create([
+            'name' => 'PawHaven Admin',
+            'email' => 'admin@pawhaven.test',
+            'password' => env('ADMIN_PASSWORD', 'password'),
+        ]);
 
         User::factory()->create([
             'name' => 'Test User',
