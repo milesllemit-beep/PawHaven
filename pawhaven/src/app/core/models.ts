@@ -1,4 +1,4 @@
-export type Role = 'user' | 'admin';
+export type Role = 'user' | 'rescuer' | 'admin';
 
 export interface User {
   id: number;
@@ -97,7 +97,7 @@ export interface AdoptionApplication {
 }
 
 export interface AdminStats {
-  users: { total: number; admins: number; regular: number };
+  users: { total: number; admins: number; rescuers: number; regular: number };
   animals: { total: number; available: number; pending: number; adopted: number };
   stray_reports: {
     total: number;

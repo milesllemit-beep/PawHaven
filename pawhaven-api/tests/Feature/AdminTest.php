@@ -24,6 +24,30 @@ class AdminTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_rescuers_cannot_access_admin_endpoints(): void
+    {
+        $rescuer = User::factory()->rescuer()->create();
+
+        $this->actingAs($rescuer, 'sanctum')->getJson('/api/admin/users')->assertForbidden();
+        $this->actingAs($rescuer, 'sanctum')->getJson('/api/admin/stats')->assertForbidden();
+        $this->actingAs($rescuer, 'sanctum')
+            ->patchJson('/api/admin/users/'.User::factory()->create()->id, ['role' => 'admin'])
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_assign_the_rescuer_role(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create();
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/admin/users/{$user->id}", ['role' => User::ROLE_RESCUER])
+            ->assertOk()
+            ->assertJsonPath('data.role', User::ROLE_RESCUER);
+
+        $this->assertSame(User::ROLE_RESCUER, $user->fresh()->role);
+    }
+
     public function test_admins_can_list_and_filter_users(): void
     {
         $admin = User::factory()->admin()->create();

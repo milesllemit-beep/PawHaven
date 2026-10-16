@@ -20,7 +20,26 @@ class User extends Authenticatable
 
     public const ROLE_USER = 'user';
 
+    public const ROLE_RESCUER = 'rescuer';
+
     public const ROLE_ADMIN = 'admin';
+
+    /**
+     * Roles that may be self-selected during public registration.
+     *
+     * Administrators are intentionally excluded and must only be created
+     * through a trusted seeder or a protected administrative process.
+     *
+     * @var array<int, string>
+     */
+    public const REGISTERABLE_ROLES = [self::ROLE_USER, self::ROLE_RESCUER];
+
+    /**
+     * Every role the application understands.
+     *
+     * @var array<int, string>
+     */
+    public const ROLES = [self::ROLE_USER, self::ROLE_RESCUER, self::ROLE_ADMIN];
 
     /**
      * Default attribute values for the model.

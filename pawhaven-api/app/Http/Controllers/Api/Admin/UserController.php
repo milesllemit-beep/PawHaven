@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
@@ -19,7 +20,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
-            'role' => ['nullable', 'in:user,admin'],
+            'role' => ['nullable', Rule::in(User::ROLES)],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 

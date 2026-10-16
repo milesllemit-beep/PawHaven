@@ -20,6 +20,7 @@ class DashboardController extends Controller
             'users' => [
                 'total' => User::count(),
                 'admins' => User::where('role', User::ROLE_ADMIN)->count(),
+                'rescuers' => User::where('role', User::ROLE_RESCUER)->count(),
                 'regular' => User::where('role', User::ROLE_USER)->count(),
             ],
             'animals' => [

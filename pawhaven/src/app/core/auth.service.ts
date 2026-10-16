@@ -3,7 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { AuthResponse, User } from './models';
+import { AuthResponse, Role, User } from './models';
 
 const TOKEN_KEY = 'pawhaven_token';
 
@@ -26,6 +26,7 @@ export class AuthService {
     email: string;
     password: string;
     password_confirmation: string;
+    role: Role;
     phone?: string;
     location?: string;
   }): Observable<AuthResponse> {

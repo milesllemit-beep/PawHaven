@@ -46,6 +46,70 @@ class AuthTest extends TestCase
             ->assertJsonValidationErrors(['email', 'password']);
     }
 
+    public function test_registration_assigns_the_selected_rescuer_role(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Riley Rescuer',
+            'email' => 'riley@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => User::ROLE_RESCUER,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('user.role', User::ROLE_RESCUER);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'riley@example.com',
+            'role' => User::ROLE_RESCUER,
+        ]);
+    }
+
+    public function test_registration_cannot_create_an_administrator(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Sneaky Admin',
+            'email' => 'sneaky@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['role']);
+
+        $this->assertDatabaseMissing('users', ['email' => 'sneaky@example.com']);
+    }
+
+    public function test_registration_rejects_unknown_roles(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Mystery User',
+            'email' => 'mystery@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => 'superadmin',
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['role']);
+    }
+
+    public function test_a_rescuer_can_access_authenticated_routes_but_not_admin_routes(): void
+    {
+        $rescuer = User::factory()->rescuer()->create();
+        $token = $rescuer->createToken('auth')->plainTextToken;
+
+        $this->withToken($token)
+            ->getJson('/api/auth/me')
+            ->assertOk()
+            ->assertJsonPath('data.role', User::ROLE_RESCUER);
+
+        $this->withToken($token)
+            ->getJson('/api/admin/users')
+            ->assertForbidden();
+    }
+
     public function test_a_user_can_login_with_valid_credentials(): void
     {
         User::factory()->create([

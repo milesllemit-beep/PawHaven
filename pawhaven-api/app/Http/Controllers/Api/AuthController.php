@@ -19,7 +19,13 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::create($request->validated());
+        $attributes = $request->safe()->except('role');
+
+        // The role is validated against User::REGISTERABLE_ROLES, so an
+        // administrator can never be created through public registration.
+        $attributes['role'] = $request->validated('role', User::ROLE_USER);
+
+        $user = User::create($attributes);
 
         $token = $user->createToken('auth')->plainTextToken;
 

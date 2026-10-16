@@ -4,8 +4,7 @@ import { adminGuard, authGuard } from './core/auth.guard';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () =>
-      import('./features/animals/animal-list.component').then((m) => m.AnimalListComponent),
+    loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent),
   },
   {
     path: 'animals',

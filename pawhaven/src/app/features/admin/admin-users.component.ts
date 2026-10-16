@@ -23,6 +23,7 @@ import { Paginated, Role, User } from '../../core/models';
       >
         <option value="">All roles</option>
         <option value="user">Users</option>
+        <option value="rescuer">Rescuers</option>
         <option value="admin">Admins</option>
       </select>
       <button
@@ -67,6 +68,7 @@ import { Paginated, Role, User } from '../../core/models';
                       class="rounded-lg border border-slate-300 px-2 py-1 text-sm focus:border-emerald-500 focus:outline-none"
                     >
                       <option value="user">user</option>
+                      <option value="rescuer">rescuer</option>
                       <option value="admin">admin</option>
                     </select>
                   }

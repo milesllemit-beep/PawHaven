@@ -45,6 +45,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the user is a rescuer.
+     */
+    public function rescuer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => User::ROLE_RESCUER,
+        ]);
+    }
+
+    /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static

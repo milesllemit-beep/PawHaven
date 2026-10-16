@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { errorMessage } from '../../core/media';
+import { Role } from '../../core/models';
 
 @Component({
   selector: 'app-register',
@@ -37,6 +38,52 @@ import { errorMessage } from '../../core/media';
               class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
             />
           </div>
+
+          <fieldset>
+            <legend class="block text-sm font-medium text-slate-700">I am joining as</legend>
+            <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label
+                class="flex cursor-pointer gap-3 rounded-lg border border-slate-300 p-3 transition hover:border-emerald-400 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50"
+              >
+                <input
+                  type="radio"
+                  name="role"
+                  value="user"
+                  [(ngModel)]="model.role"
+                  required
+                  class="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span>
+                  <span class="block text-sm font-semibold text-slate-800">General User / Adopter</span>
+                  <span class="mt-0.5 block text-xs text-slate-500">
+                    Browse animals and apply to give one a loving home.
+                  </span>
+                </span>
+              </label>
+
+              <label
+                class="flex cursor-pointer gap-3 rounded-lg border border-slate-300 p-3 transition hover:border-emerald-400 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50"
+              >
+                <input
+                  type="radio"
+                  name="role"
+                  value="rescuer"
+                  [(ngModel)]="model.role"
+                  required
+                  class="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span>
+                  <span class="block text-sm font-semibold text-slate-800">Rescuer</span>
+                  <span class="mt-0.5 block text-xs text-slate-500">
+                    Help strays and support animals that need a home.
+                  </span>
+                </span>
+              </label>
+            </div>
+            @if (roleError()) {
+              <p class="mt-2 text-sm text-red-600">{{ roleError() }}</p>
+            }
+          </fieldset>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label class="block text-sm font-medium text-slate-700">Phone</label>
@@ -98,21 +145,37 @@ export class RegisterComponent {
 
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
+  readonly roleError = signal<string | null>(null);
 
-  model = {
+  model: {
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    password: string;
+    password_confirmation: string;
+    role: Role | '';
+  } = {
     name: '',
     email: '',
     phone: '',
     location: '',
     password: '',
     password_confirmation: '',
+    role: '',
   };
 
   submit(): void {
+    if (!this.model.role) {
+      this.roleError.set('Please choose whether you are joining as an adopter or a rescuer.');
+      return;
+    }
+
+    this.roleError.set(null);
     this.submitting.set(true);
     this.error.set(null);
 
-    this.auth.register(this.model).subscribe({
+    this.auth.register({ ...this.model, role: this.model.role }).subscribe({
       next: () => {
         this.submitting.set(false);
         this.router.navigate(['/']);

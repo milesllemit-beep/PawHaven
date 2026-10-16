@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AdminStats, Paginated, User } from './models';
+import { AdminStats, Paginated, Role, User } from './models';
 
 function buildParams(source: object): HttpParams {
   let params = new HttpParams();
@@ -27,7 +27,7 @@ export class AdminService {
     });
   }
 
-  updateRole(id: number, role: 'user' | 'admin'): Observable<{ data: User }> {
+  updateRole(id: number, role: Role): Observable<{ data: User }> {
     return this.http.patch<{ data: User }>(`${this.base}/users/${id}`, { role });
   }
 

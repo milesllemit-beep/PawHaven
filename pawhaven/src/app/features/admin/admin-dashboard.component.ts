@@ -79,7 +79,7 @@ export class AdminDashboardComponent implements OnInit {
         value: data.adoption_applications.total,
         hint: `${data.adoption_applications.pending} pending`,
       },
-      { label: 'Users', value: data.users.total, hint: `${data.users.admins} admins` },
+      { label: 'Users', value: data.users.total, hint: `${data.users.admins} admins, ${data.users.rescuers} rescuers` },
     ];
   }
 }
