@@ -25,6 +25,36 @@ export const authGuard: CanActivateFn = () => {
   );
 };
 
+export const rescuerGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isAuthenticated()) {
+    router.navigate(['/login']);
+    return false;
+  }
+
+  const ensureRescuer = () => {
+    if (auth.isRescuer()) {
+      return true;
+    }
+    router.navigate(['/']);
+    return false;
+  };
+
+  if (auth.user()) {
+    return ensureRescuer();
+  }
+
+  return auth.me().pipe(
+    map(() => ensureRescuer()),
+    catchError(() => {
+      router.navigate(['/login']);
+      return of(false);
+    }),
+  );
+};
+
 export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

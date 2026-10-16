@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -69,5 +70,23 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    /**
+     * Determine whether the user is a rescuer.
+     */
+    public function isRescuer(): bool
+    {
+        return $this->role === self::ROLE_RESCUER;
+    }
+
+    /**
+     * The rescue cases owned by the user.
+     *
+     * @return HasMany<RescueCase, $this>
+     */
+    public function rescueCases(): HasMany
+    {
+        return $this->hasMany(RescueCase::class, 'rescuer_id');
     }
 }

@@ -37,6 +37,15 @@
             My applications
           </a>
         }
+        @if (auth.isRescuer()) {
+          <a
+            routerLink="/rescuer"
+            routerLinkActive="text-emerald-700"
+            class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Rescuer
+          </a>
+        }
         @if (auth.isAdmin()) {
           <a
             routerLink="/admin"

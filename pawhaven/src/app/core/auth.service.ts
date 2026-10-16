@@ -20,6 +20,7 @@ export class AuthService {
   readonly token = this._token.asReadonly();
   readonly isAuthenticated = computed(() => this._token() !== null);
   readonly isAdmin = computed(() => this._user()?.role === 'admin');
+  readonly isRescuer = computed(() => this._user()?.role === 'rescuer');
 
   register(payload: {
     name: string;

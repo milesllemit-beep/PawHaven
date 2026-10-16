@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AdoptionApplication;
 use App\Models\Animal;
+use App\Models\RescueCase;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -143,6 +144,21 @@ class AdoptionApplicationTest extends TestCase
 
         $this->assertSame(Animal::STATUS_ADOPTED, $animal->fresh()->status);
         $this->assertSame(AdoptionApplication::STATUS_REJECTED, $second->fresh()->status);
+    }
+
+    public function test_approving_an_adoption_completes_a_linked_rescue_case(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $animal = Animal::factory()->create(['status' => Animal::STATUS_AVAILABLE]);
+        $case = RescueCase::factory()->readyForAdoption()->create(['animal_id' => $animal->id]);
+        $application = AdoptionApplication::factory()->create(['animal_id' => $animal->id]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/adoption-applications/{$application->id}/review", ['status' => 'approved'])
+            ->assertOk();
+
+        $this->assertSame(RescueCase::STATUS_ADOPTED, $case->fresh()->status);
+        $this->assertNotNull($case->fresh()->adopted_at);
     }
 
     public function test_admin_rejection_keeps_animal_available(): void

@@ -96,6 +96,112 @@ export interface AdoptionApplication {
   updated_at?: string;
 }
 
+export type RescueStatus =
+  | 'rescued'
+  | 'in_care'
+  | 'recovering'
+  | 'ready_for_adoption'
+  | 'adopted';
+
+export type RescuePhotoKind = 'initial' | 'progress';
+
+export type MilestoneType =
+  | 'rescue'
+  | 'first_day'
+  | 'health'
+  | 'recovery'
+  | 'ready_for_adoption'
+  | 'adoption'
+  | 'general';
+
+export interface RescueCasePhoto {
+  id: number;
+  url: string;
+  caption: string | null;
+  taken_at: string | null;
+  kind: RescuePhotoKind;
+  is_primary: boolean;
+  sort_order: number;
+}
+
+export interface RescueMilestonePhoto {
+  id: number;
+  url: string;
+  caption: string | null;
+  sort_order: number;
+}
+
+export interface RescueMilestone {
+  id: number;
+  title: string;
+  description: string | null;
+  type: MilestoneType;
+  occurred_at: string;
+  photos?: RescueMilestonePhoto[];
+  author?: { id: number; name: string } | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface RescueCase {
+  id: number;
+  name: string | null;
+  species: string;
+  breed: string | null;
+  estimated_age_months: number | null;
+  sex: AnimalSex;
+  rescued_at: string;
+  rescue_location: string;
+  condition_on_rescue: string | null;
+  description: string | null;
+  care_notes: string | null;
+  status: RescueStatus;
+  adopted_at: string | null;
+  allowed_transitions: RescueStatus[];
+  photos?: RescueCasePhoto[];
+  primary_photo?: RescueCasePhoto | null;
+  before_photo?: RescueCasePhoto | null;
+  after_photo?: RescueCasePhoto | null;
+  milestones?: RescueMilestone[];
+  animal?: { id: number; name: string; status: AnimalStatus } | null;
+  rescuer?: { id: number; name: string } | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface RescuerDashboard {
+  profile: {
+    name: string;
+    email: string;
+    phone: string | null;
+    location: string | null;
+    member_since: string | null;
+  };
+  stats: {
+    total_rescued: number;
+    in_care: number;
+    recovering: number;
+    ready_for_adoption: number;
+    adopted: number;
+  };
+  recent_cases: RescueCase[];
+  recent_activity: (RescueMilestone & {
+    case: { id: number; name: string | null; species: string } | null;
+  })[];
+  recent_photos: (RescueCasePhoto & {
+    case: { id: number; name: string | null; species: string } | null;
+  })[];
+  passport_highlights: {
+    id: number;
+    name: string | null;
+    species: string;
+    status: RescueStatus;
+    primary_photo: RescueCasePhoto | null;
+    milestones_count: number;
+    latest_milestone: RescueMilestone | null;
+  }[];
+}
+
 export interface AdminStats {
   users: { total: number; admins: number; rescuers: number; regular: number };
   animals: { total: number; available: number; pending: number; adopted: number };

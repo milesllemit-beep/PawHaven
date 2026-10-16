@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminGuard, authGuard } from './core/auth.guard';
+import { adminGuard, authGuard, rescuerGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   {
@@ -48,6 +48,43 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () =>
       import('./features/auth/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'rescuer',
+    canActivate: [rescuerGuard],
+    loadComponent: () =>
+      import('./features/rescuer/rescuer-layout.component').then((m) => m.RescuerLayoutComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/rescuer/rescuer-dashboard.component').then(
+            (m) => m.RescuerDashboardComponent,
+          ),
+      },
+      {
+        path: 'cases',
+        loadComponent: () =>
+          import('./features/rescuer/rescue-cases.component').then((m) => m.RescueCasesComponent),
+      },
+      {
+        path: 'cases/new',
+        loadComponent: () =>
+          import('./features/rescuer/rescue-report.component').then((m) => m.RescueReportComponent),
+      },
+      {
+        path: 'cases/:id',
+        loadComponent: () =>
+          import('./features/rescuer/rescue-case-detail.component').then(
+            (m) => m.RescueCaseDetailComponent,
+          ),
+      },
+      {
+        path: 'cases/:id/passport',
+        loadComponent: () =>
+          import('./features/rescuer/paw-passport.component').then((m) => m.PawPassportComponent),
+      },
+    ],
   },
   {
     path: 'admin',

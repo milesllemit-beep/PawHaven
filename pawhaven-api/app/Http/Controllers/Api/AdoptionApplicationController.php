@@ -8,6 +8,7 @@ use App\Http\Requests\StoreAdoptionApplicationRequest;
 use App\Http\Resources\AdoptionApplicationResource;
 use App\Models\AdoptionApplication;
 use App\Models\Animal;
+use App\Models\RescueCase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -160,6 +161,17 @@ class AdoptionApplicationController extends Controller
 
             if ($status === AdoptionApplication::STATUS_APPROVED) {
                 $application->animal()->update(['status' => Animal::STATUS_ADOPTED]);
+
+                // Completing the adoption also completes any rescue case that
+                // published this animal, so rescuers' impact summaries stay
+                // accurate without letting them set `adopted` themselves.
+                RescueCase::query()
+                    ->where('animal_id', $application->animal_id)
+                    ->where('status', '!=', RescueCase::STATUS_ADOPTED)
+                    ->update([
+                        'status' => RescueCase::STATUS_ADOPTED,
+                        'adopted_at' => now(),
+                    ]);
 
                 AdoptionApplication::query()
                     ->where('animal_id', $application->animal_id)
