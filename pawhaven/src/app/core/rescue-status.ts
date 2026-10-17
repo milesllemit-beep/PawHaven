@@ -16,6 +16,30 @@ export const RESCUE_STATUS_LABELS: Record<RescueStatus, string> = {
   adopted: 'Adopted',
 };
 
+/**
+ * Plain-language meaning of each status, shown alongside the current status so
+ * rescuers understand exactly what the stage represents.
+ */
+export const RESCUE_STATUS_DESCRIPTIONS: Record<RescueStatus, string> = {
+  rescued: 'Just rescued and documented. Ongoing care has not started yet.',
+  in_care: 'Safe and receiving day-to-day care (food, water and shelter).',
+  recovering: 'Being treated for, or recovering from, an injury or illness.',
+  ready_for_adoption: 'Healthy enough to be published and find a forever home.',
+  adopted: 'The adoption has been completed. The journey is finished.',
+};
+
+/**
+ * Plain-language explanation of what moving *to* a given status means. Used to
+ * describe the next step before a rescuer confirms a status change.
+ */
+export const RESCUE_STATUS_TRANSITION_HINTS: Record<RescueStatus, string> = {
+  rescued: 'Return the case to the initial rescued stage.',
+  in_care: 'Mark the animal as safe and receiving ongoing care.',
+  recovering: 'Mark the animal as recovering or receiving treatment.',
+  ready_for_adoption: 'Mark the animal as ready to be published for adoption.',
+  adopted: 'Complete the adoption. Only an administrator can set this.',
+};
+
 export function rescueStatusClass(status: RescueStatus): string {
   switch (status) {
     case 'rescued':
@@ -78,7 +102,7 @@ export function speciesIcon(species: string): string {
 }
 
 export function animalLabel(name: string | null | undefined): string {
-  return name && name.trim().length > 0 ? name : 'Unknown';
+  return name && name.trim().length > 0 ? name : 'Unnamed animal';
 }
 
 export function formatDate(value: string | null | undefined): string {

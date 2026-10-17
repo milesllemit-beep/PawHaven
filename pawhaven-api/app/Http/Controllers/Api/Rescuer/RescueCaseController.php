@@ -35,15 +35,33 @@ class RescueCaseController extends Controller
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $cases = RescueCase::query()
-            ->where('rescuer_id', $request->user()->id)
+        $base = RescueCase::query()->where('rescuer_id', $request->user()->id);
+
+        // Summary counts are scoped to the rescuer and intentionally ignore the
+        // active filters so the interface can show stable totals and only the
+        // species values this rescuer actually has on record.
+        $counts = (clone $base)
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $byStatus = collect(RescueCase::STATUSES)
+            ->mapWithKeys(fn (string $status): array => [$status => (int) ($counts[$status] ?? 0)]);
+
+        $summary = [
+            'total' => $byStatus->sum(),
+            'by_status' => $byStatus->all(),
+            'species' => (clone $base)->distinct()->pluck('species')->filter()->sort()->values(),
+        ];
+
+        $cases = $base
             ->filter(collect($validated)->only(['search', 'status', 'species'])->all())
             ->with(['primaryPhoto', 'photos', 'animal'])
             ->latest()
             ->paginate($validated['per_page'] ?? 12)
             ->withQueryString();
 
-        return RescueCaseResource::collection($cases);
+        return RescueCaseResource::collection($cases)->additional(['summary' => $summary]);
     }
 
     /**

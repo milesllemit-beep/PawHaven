@@ -9,7 +9,9 @@ import {
   milestoneIcon,
   MILESTONE_TYPE_LABELS,
   rescueStatusClass,
+  RESCUE_STATUS_DESCRIPTIONS,
   RESCUE_STATUS_LABELS,
+  RESCUE_STATUS_TRANSITION_HINTS,
   speciesIcon,
 } from '../../core/rescue-status';
 import { RescueService } from '../../core/rescue.service';
@@ -19,108 +21,88 @@ interface PreviewFile {
   url: string;
 }
 
+interface CompletenessItem {
+  label: string;
+  done: boolean;
+}
+
 @Component({
   selector: 'app-rescue-case-detail',
   imports: [FormsModule, RouterLink],
   template: `
     @if (loading()) {
-      <p class="text-emerald-900/60">Loading rescue case...</p>
+      <p class="text-slate-500">Loading rescue case...</p>
     } @else if (error() && !case()) {
-      <p class="rounded-xl bg-red-50 p-4 text-sm text-red-700">{{ error() }}</p>
-      <a routerLink="/rescuer/cases" class="mt-4 inline-block text-sm text-emerald-700 hover:underline">
-        &larr; Back to rescue cases
-      </a>
+      <div class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+        <p class="text-sm text-red-700">{{ error() }}</p>
+        <a routerLink="/rescuer/cases" class="mt-3 inline-block text-sm font-semibold text-red-700 hover:underline">
+          &larr; Back to rescue cases
+        </a>
+      </div>
     } @else if (case(); as rescueCase) {
       <a routerLink="/rescuer/cases" class="text-sm text-emerald-700 hover:underline">
         &larr; Back to rescue cases
       </a>
 
       @if (error()) {
-        <p class="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p>
+        <p class="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+          {{ error() }}
+        </p>
       }
       @if (notice()) {
-        <p class="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{{ notice() }}</p>
+        <p class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
+          {{ notice() }}
+        </p>
       }
 
-      <!-- Before / after -->
-      <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <figure class="overflow-hidden rounded-2xl bg-white shadow-sm">
-          @if (rescueCase.before_photo) {
-            <img
-              [src]="mediaUrl(rescueCase.before_photo.url)"
-              alt="Before - at rescue"
-              class="h-56 w-full object-cover"
-            />
-          } @else {
-            <div class="flex h-56 items-center justify-center text-5xl text-emerald-200" aria-hidden="true">
-              {{ speciesIcon(rescueCase.species) }}
-            </div>
-          }
-          <figcaption class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-emerald-900/60">
-            Before &middot; {{ formatDate(rescueCase.rescued_at) }}
-          </figcaption>
-        </figure>
-        <figure class="overflow-hidden rounded-2xl bg-white shadow-sm">
-          @if (rescueCase.after_photo) {
-            <img
-              [src]="mediaUrl(rescueCase.after_photo.url)"
-              alt="After - latest progress"
-              class="h-56 w-full object-cover"
-            />
-          } @else {
-            <div class="flex h-56 flex-col items-center justify-center text-emerald-900/40">
-              <span class="text-3xl" aria-hidden="true">🐾</span>
-              <span class="mt-1 text-sm">Add progress photos</span>
-            </div>
-          }
-          <figcaption class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-emerald-900/60">
-            After &middot; latest progress
-          </figcaption>
-        </figure>
-      </div>
-
       <!-- Header -->
-      <div class="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-emerald-950">
-                {{ animalLabel(rescueCase.name) }}
-              </h2>
-              <span
-                class="rounded-full px-3 py-1 text-xs font-semibold"
-                [class]="statusClass(rescueCase.status)"
-              >
+      <div class="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex flex-wrap items-start gap-4">
+          @if (rescueCase.primary_photo) {
+            <img
+              [src]="mediaUrl(rescueCase.primary_photo.url)"
+              [alt]="animalLabel(rescueCase.name)"
+              class="h-20 w-20 rounded-lg object-cover"
+            />
+          } @else {
+            <span class="flex h-20 w-20 items-center justify-center rounded-lg bg-slate-100 text-3xl" aria-hidden="true">
+              {{ speciesIcon(rescueCase.species) }}
+            </span>
+          }
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-3">
+              <h2 class="text-2xl font-bold text-slate-800">{{ animalLabel(rescueCase.name) }}</h2>
+              <span class="rounded-full px-3 py-1 text-xs font-semibold" [class]="statusClass(rescueCase.status)">
                 {{ statusLabel(rescueCase.status) }}
               </span>
             </div>
-            <p class="mt-1 text-sm capitalize text-emerald-900/70">
+            <p class="mt-1 text-sm capitalize text-slate-500">
               {{ rescueCase.species }}
               @if (rescueCase.breed) {
                 &middot; {{ rescueCase.breed }}
               }
             </p>
-            <p class="mt-1 text-sm text-emerald-900/60">
+            <p class="mt-1 text-sm text-slate-500">
               Rescued {{ formatDate(rescueCase.rescued_at) }} &middot; {{ rescueCase.rescue_location }}
             </p>
           </div>
           <div class="flex flex-wrap gap-2">
             <a
               [routerLink]="['/rescuer/cases', rescueCase.id, 'passport']"
-              class="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+              class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
             >
               View Passport
             </a>
             <button
               type="button"
-              class="rounded-xl border border-emerald-900/15 bg-white px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-50"
+              class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
               (click)="toggleEdit()"
             >
               {{ editing() ? 'Cancel edit' : 'Edit details' }}
             </button>
             <button
               type="button"
-              class="rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+              class="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
               (click)="deleteCase()"
             >
               Delete
@@ -130,58 +112,118 @@ interface PreviewFile {
       </div>
 
       <!-- Status workflow -->
-      <div class="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-        <h3 class="text-lg font-semibold text-emerald-950">Rescue status</h3>
-        <p class="mt-1 text-sm text-emerald-900/60">
-          Current status: <strong>{{ statusLabel(rescueCase.status) }}</strong>
-        </p>
-        @if (rescueCase.allowed_transitions.length) {
-          <div class="mt-3 flex flex-wrap gap-2">
+      <div class="mt-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-800">Rescue status</h3>
+        <p class="mt-1 text-sm text-slate-500">{{ statusDescription(rescueCase.status) }}</p>
+
+        @if (pendingTransition(); as target) {
+          <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4" role="alertdialog" aria-live="assertive">
+            <p class="text-sm font-semibold text-amber-900">
+              Move this case to "{{ statusLabel(target) }}"?
+            </p>
+            <p class="mt-1 text-sm text-amber-800">{{ transitionHint(target) }}</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                [disabled]="updatingStatus()"
+                (click)="confirmTransition()"
+              >
+                {{ updatingStatus() ? 'Updating...' : 'Confirm change' }}
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                [disabled]="updatingStatus()"
+                (click)="cancelTransition()"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        } @else if (rescueCase.allowed_transitions.length) {
+          <p class="mt-3 text-sm font-medium text-slate-700">What you can do next:</p>
+          <div class="mt-2 flex flex-wrap gap-2">
             @for (status of rescueCase.allowed_transitions; track status) {
               <button
                 type="button"
-                class="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+                class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
                 [disabled]="updatingStatus()"
-                (click)="changeStatus(status)"
+                [title]="transitionHint(status)"
+                (click)="requestTransition(status)"
               >
                 Move to {{ statusLabel(status) }}
               </button>
             }
           </div>
-        } @else {
-          <p class="mt-3 text-sm text-emerald-900/60">
-            No further status changes are available for this case.
+          <p class="mt-2 text-xs text-slate-400">You will be asked to confirm before the change is saved.</p>
+        } @else if (rescueCase.status === 'adopted') {
+          <p class="mt-3 rounded-lg bg-slate-100 p-3 text-sm text-slate-600">
+            This case is complete. No further status changes are available.
           </p>
+        } @else {
+          <p class="mt-3 text-sm text-slate-500">No further status changes are available for this case.</p>
         }
-        <p class="mt-3 text-xs text-emerald-900/50">
+
+        <p class="mt-3 text-xs text-slate-400">
           An animal is only marked as <strong>Adopted</strong> when its adoption is completed
           through the adoption workflow or confirmed by an administrator.
         </p>
       </div>
 
+      <!-- Before / after -->
+      <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <figure class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          @if (rescueCase.before_photo) {
+            <img [src]="mediaUrl(rescueCase.before_photo.url)" alt="Before - at rescue" class="h-56 w-full object-cover" />
+          } @else {
+            <div class="flex h-56 items-center justify-center text-slate-300" aria-hidden="true">
+              <span class="text-5xl">{{ speciesIcon(rescueCase.species) }}</span>
+            </div>
+          }
+          <figcaption class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Before &middot; {{ formatDate(rescueCase.rescued_at) }}
+          </figcaption>
+        </figure>
+        <figure class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          @if (rescueCase.after_photo) {
+            <img [src]="mediaUrl(rescueCase.after_photo.url)" alt="After - latest progress" class="h-56 w-full object-cover" />
+          } @else {
+            <div class="flex h-56 flex-col items-center justify-center gap-1 text-slate-400">
+              <span class="text-3xl" aria-hidden="true">🐾</span>
+              <span class="text-sm">No progress photos yet</span>
+            </div>
+          }
+          <figcaption class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            After &middot; latest progress
+          </figcaption>
+        </figure>
+      </div>
+
       <!-- Edit form -->
       @if (editing()) {
-        <form class="mt-6 rounded-2xl bg-white p-6 shadow-sm" (ngSubmit)="saveEdit()" novalidate>
-          <h3 class="text-lg font-semibold text-emerald-950">Edit case details</h3>
+        <form class="mt-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" (ngSubmit)="saveEdit()" novalidate>
+          <h3 class="text-lg font-semibold text-slate-800">Edit case details</h3>
+          <p class="mt-1 text-sm text-slate-500">All fields marked * are required.</p>
           <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label class="block text-sm">
-              <span class="font-medium text-emerald-900">Name</span>
+              <span class="font-medium text-slate-700">Name</span>
               <input name="name" [(ngModel)]="editModel.name" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
             </label>
             <label class="block text-sm">
-              <span class="font-medium text-emerald-900">Species *</span>
+              <span class="font-medium text-slate-700">Species *</span>
               <input name="species" [(ngModel)]="editModel.species" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
             </label>
             <label class="block text-sm">
-              <span class="font-medium text-emerald-900">Breed</span>
+              <span class="font-medium text-slate-700">Breed</span>
               <input name="breed" [(ngModel)]="editModel.breed" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
             </label>
             <label class="block text-sm">
-              <span class="font-medium text-emerald-900">Estimated age (months)</span>
+              <span class="font-medium text-slate-700">Estimated age (months)</span>
               <input type="number" name="estimated_age_months" [(ngModel)]="editModel.estimated_age_months" min="0" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
             </label>
             <label class="block text-sm">
-              <span class="font-medium text-emerald-900">Sex</span>
+              <span class="font-medium text-slate-700">Sex</span>
               <select name="sex" [(ngModel)]="editModel.sex" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
                 <option value="unknown">Unknown</option>
                 <option value="male">Male</option>
@@ -189,80 +231,100 @@ interface PreviewFile {
               </select>
             </label>
             <label class="block text-sm">
-              <span class="font-medium text-emerald-900">Date rescued *</span>
+              <span class="font-medium text-slate-700">Date rescued *</span>
               <input type="date" name="rescued_at" [(ngModel)]="editModel.rescued_at" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
             </label>
             <label class="block text-sm sm:col-span-2">
-              <span class="font-medium text-emerald-900">Rescue location *</span>
+              <span class="font-medium text-slate-700">Rescue location *</span>
               <input name="rescue_location" [(ngModel)]="editModel.rescue_location" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
             </label>
           </div>
           <label class="mt-4 block text-sm">
-            <span class="font-medium text-emerald-900">Condition on rescue</span>
+            <span class="font-medium text-slate-700">Condition on rescue</span>
             <textarea name="condition_on_rescue" [(ngModel)]="editModel.condition_on_rescue" rows="2" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea>
           </label>
           <label class="mt-4 block text-sm">
-            <span class="font-medium text-emerald-900">Description</span>
+            <span class="font-medium text-slate-700">Description</span>
             <textarea name="description" [(ngModel)]="editModel.description" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea>
           </label>
           <label class="mt-4 block text-sm">
-            <span class="font-medium text-emerald-900">Care notes (private)</span>
+            <span class="font-medium text-slate-700">Care notes (private)</span>
             <textarea name="care_notes" [(ngModel)]="editModel.care_notes" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea>
           </label>
-          <button type="submit" class="mt-4 rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50" [disabled]="saving()">
+          <button type="submit" class="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50" [disabled]="saving()">
             {{ saving() ? 'Saving...' : 'Save changes' }}
           </button>
         </form>
       }
 
-      <!-- Case info -->
-      <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div class="rounded-2xl bg-white p-6 shadow-sm lg:col-span-2">
-          <h3 class="text-lg font-semibold text-emerald-950">Case details</h3>
+      <!-- Details + adoption -->
+      <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
+          <h3 class="text-lg font-semibold text-slate-800">Case details</h3>
           <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div><dt class="text-xs font-semibold uppercase text-emerald-900/50">Sex</dt><dd class="capitalize text-emerald-950">{{ rescueCase.sex }}</dd></div>
-            <div><dt class="text-xs font-semibold uppercase text-emerald-900/50">Estimated age</dt><dd class="text-emerald-950">{{ rescueCase.estimated_age_months !== null ? rescueCase.estimated_age_months + ' months' : 'Unknown' }}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase text-emerald-900/50">Condition on rescue</dt><dd class="text-emerald-950">{{ rescueCase.condition_on_rescue || '—' }}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase text-emerald-900/50">Description</dt><dd class="whitespace-pre-line text-emerald-950">{{ rescueCase.description || '—' }}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase text-emerald-900/50">Care notes (private)</dt><dd class="whitespace-pre-line text-emerald-950">{{ rescueCase.care_notes || '—' }}</dd></div>
+            <div><dt class="text-xs font-semibold uppercase text-slate-400">Sex</dt><dd class="capitalize text-slate-700">{{ rescueCase.sex }}</dd></div>
+            <div><dt class="text-xs font-semibold uppercase text-slate-400">Estimated age</dt><dd class="text-slate-700">{{ rescueCase.estimated_age_months !== null ? rescueCase.estimated_age_months + ' months' : 'Unknown' }}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase text-slate-400">Condition on rescue</dt><dd class="text-slate-700">{{ rescueCase.condition_on_rescue || '—' }}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase text-slate-400">Description</dt><dd class="whitespace-pre-line text-slate-700">{{ rescueCase.description || '—' }}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase text-slate-400">Care notes (private)</dt><dd class="whitespace-pre-line text-slate-700">{{ rescueCase.care_notes || '—' }}</dd></div>
           </dl>
         </div>
 
-        <div class="rounded-2xl bg-white p-6 shadow-sm">
-          <h3 class="text-lg font-semibold text-emerald-950">Adoption</h3>
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 class="text-lg font-semibold text-slate-800">Adoption</h3>
           @if (rescueCase.animal) {
-            <p class="mt-2 text-sm text-emerald-900/70">
-              This animal is linked to an adoption listing:
-              <strong>{{ rescueCase.animal.name }}</strong> ({{ rescueCase.animal.status }}).
+            <p class="mt-2 text-sm text-slate-500">
+              Linked to a public adoption listing:
+              <strong class="text-slate-700">{{ rescueCase.animal.name }}</strong> ({{ rescueCase.animal.status }}).
             </p>
             <a [routerLink]="['/animals', rescueCase.animal.id]" class="mt-3 inline-block text-sm font-semibold text-emerald-700 hover:underline">
               View public listing &rarr;
             </a>
           } @else {
-            <p class="mt-2 text-sm text-emerald-900/70">
-              This case is not yet published to the adoption listings. An administrator can
-              publish it once the animal is ready.
+            <p class="mt-2 text-sm text-slate-500">
+              Not yet published to the adoption listings. An administrator can publish it once
+              the animal is ready.
             </p>
           }
         </div>
       </div>
 
+      <!-- Completeness -->
+      <div class="mt-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="text-lg font-semibold text-slate-800">Case completeness</h3>
+          <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+            {{ completenessDone() }} of {{ completeness(rescueCase).length }} recorded
+          </span>
+        </div>
+        <ul class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          @for (item of completeness(rescueCase); track item.label) {
+            <li class="flex items-center gap-2 text-sm">
+              <span [class]="item.done ? 'text-emerald-600' : 'text-slate-300'" aria-hidden="true">
+                {{ item.done ? '✓' : '○' }}
+              </span>
+              <span [class]="item.done ? 'text-slate-700' : 'text-slate-500'">{{ item.label }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+
       <!-- Photos -->
-      <div class="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-        <h3 class="text-lg font-semibold text-emerald-950">Photos</h3>
+      <div class="mt-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-800">Photos</h3>
         @if (rescueCase.photos?.length) {
           <ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             @for (photo of rescueCase.photos; track photo.id) {
-              <li class="relative overflow-hidden rounded-xl bg-emerald-50">
+              <li class="relative overflow-hidden rounded-lg bg-slate-100">
                 <img [src]="mediaUrl(photo.url)" [alt]="photo.caption || 'Rescue photo'" class="h-32 w-full object-cover" />
-                <span class="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-800">
+                <span class="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-700">
                   {{ photo.kind }}
                 </span>
                 <button
                   type="button"
                   (click)="deletePhoto(photo.id)"
                   class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow"
-                  aria-label="Delete photo"
+                  [attr.aria-label]="'Delete photo'"
                 >
                   ×
                 </button>
@@ -270,30 +332,31 @@ interface PreviewFile {
             }
           </ul>
         } @else {
-          <p class="mt-2 text-sm text-emerald-900/60">No photos yet.</p>
+          <p class="mt-2 text-sm text-slate-500">No photos yet.</p>
         }
 
         <div class="mt-4 border-t border-slate-100 pt-4">
-          <label for="case-photos" class="block text-sm font-medium text-emerald-900">
-            Add progress photos (JPEG, PNG, WebP, max 5 MB)
+          <label for="case-photos" class="block text-sm font-medium text-slate-700">
+            Add progress photos
           </label>
-          <input id="case-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple (change)="onCasePhotosSelected($event)" class="mt-1 w-full text-sm text-emerald-900/70" />
+          <p class="text-xs text-slate-400">JPEG, PNG or WebP, up to 5 MB each.</p>
+          <input id="case-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple (change)="onCasePhotosSelected($event)" class="mt-1 w-full text-sm text-slate-600" />
           @if (photoError()) {
-            <p class="mt-1 text-xs text-red-600">{{ photoError() }}</p>
+            <p class="mt-1 text-xs text-red-600" role="alert">{{ photoError() }}</p>
           }
           @if (photoPreviews().length) {
             <ul class="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-5">
               @for (preview of photoPreviews(); track preview.url) {
                 <li class="relative">
                   <img [src]="preview.url" [alt]="preview.file.name" class="h-20 w-full rounded-lg object-cover" />
-                  <button type="button" (click)="removePhotoPreview(preview)" class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white" aria-label="Remove">×</button>
+                  <button type="button" (click)="removePhotoPreview(preview)" class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white" [attr.aria-label]="'Remove ' + preview.file.name">×</button>
                 </li>
               }
             </ul>
           }
           <button
             type="button"
-            class="mt-3 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+            class="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
             [disabled]="uploadingPhotos() || photoPreviews().length === 0"
             (click)="uploadCasePhotos()"
           >
@@ -303,36 +366,36 @@ interface PreviewFile {
       </div>
 
       <!-- Milestones -->
-      <div class="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-emerald-950">Progress milestones</h3>
+      <div class="mt-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="text-lg font-semibold text-slate-800">Progress milestones</h3>
           <a [routerLink]="['/rescuer/cases', rescueCase.id, 'passport']" class="text-sm font-semibold text-emerald-700 hover:underline">
             View in Passport
           </a>
         </div>
 
         @if (milestones().length) {
-          <ol class="mt-4 space-y-4 border-l-2 border-emerald-100 pl-5">
+          <ol class="mt-4 space-y-4 border-l-2 border-slate-100 pl-5">
             @for (milestone of milestones(); track milestone.id) {
               <li class="relative">
-                <span class="absolute -left-[27px] flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-[10px]">{{ milestoneIcon(milestone.type) }}</span>
-                <div class="rounded-xl bg-emerald-50/60 p-4">
+                <span class="absolute -left-[27px] flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[10px]" aria-hidden="true">{{ milestoneIcon(milestone.type) }}</span>
+                <div class="rounded-lg bg-slate-50 p-4">
                   <div class="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <p class="font-semibold text-emerald-950">{{ milestone.title }}</p>
-                      <p class="text-xs text-emerald-900/60">{{ typeLabel(milestone.type) }} &middot; {{ formatDate(milestone.occurred_at) }}</p>
+                      <p class="font-semibold text-slate-800">{{ milestone.title }}</p>
+                      <p class="text-xs text-slate-500">{{ typeLabel(milestone.type) }} &middot; {{ formatDate(milestone.occurred_at) }}</p>
                     </div>
                     <button type="button" (click)="deleteMilestone(milestone.id)" class="text-xs font-semibold text-red-600 hover:underline">Delete</button>
                   </div>
                   @if (milestone.description) {
-                    <p class="mt-2 whitespace-pre-line text-sm text-emerald-900/80">{{ milestone.description }}</p>
+                    <p class="mt-2 whitespace-pre-line text-sm text-slate-600">{{ milestone.description }}</p>
                   }
                   @if (milestone.photos?.length) {
                     <ul class="mt-3 flex flex-wrap gap-2">
                       @for (mp of milestone.photos; track mp.id) {
                         <li class="relative">
                           <img [src]="mediaUrl(mp.url)" [alt]="mp.caption || 'Milestone photo'" class="h-16 w-16 rounded-lg object-cover" />
-                          <button type="button" (click)="deleteMilestonePhoto(milestone.id, mp.id)" class="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white" aria-label="Delete">×</button>
+                          <button type="button" (click)="deleteMilestonePhoto(milestone.id, mp.id)" class="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white" aria-label="Delete photo">×</button>
                         </li>
                       }
                     </ul>
@@ -342,19 +405,23 @@ interface PreviewFile {
             }
           </ol>
         } @else {
-          <p class="mt-2 text-sm text-emerald-900/60">No milestones yet. Add the first update below.</p>
+          <p class="mt-2 text-sm text-slate-500">No milestones yet. Add the first update below.</p>
         }
 
         <!-- Add milestone -->
-        <form class="mt-5 rounded-xl border border-emerald-100 p-4" (ngSubmit)="addMilestone()" novalidate>
-          <p class="text-sm font-semibold text-emerald-950">Add a milestone</p>
+        <form class="mt-5 rounded-lg border border-slate-200 p-4" (ngSubmit)="addMilestone()" novalidate>
+          <p class="text-sm font-semibold text-slate-800">Add a milestone</p>
+          <p class="text-xs text-slate-400">
+            Record facts you have confirmed. Do not record medical or treatment claims that have
+            not been verified by a veterinarian.
+          </p>
           <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <label class="block text-sm sm:col-span-2">
-              <span class="font-medium text-emerald-900">Title *</span>
+              <span class="font-medium text-slate-700">Title *</span>
               <input name="title" [(ngModel)]="milestoneModel.title" required placeholder="e.g. Vaccination completed" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
             </label>
             <label class="block text-sm">
-              <span class="font-medium text-emerald-900">Type</span>
+              <span class="font-medium text-slate-700">Type</span>
               <select name="type" [(ngModel)]="milestoneModel.type" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
                 @for (option of milestoneTypes; track option.value) {
                   <option [value]="option.value">{{ option.label }}</option>
@@ -362,20 +429,20 @@ interface PreviewFile {
               </select>
             </label>
             <label class="block text-sm">
-              <span class="font-medium text-emerald-900">Date *</span>
+              <span class="font-medium text-slate-700">Date *</span>
               <input type="date" name="occurred_at" [(ngModel)]="milestoneModel.occurred_at" required [max]="today" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
             </label>
             <label class="block text-sm sm:col-span-2">
-              <span class="font-medium text-emerald-900">Description</span>
+              <span class="font-medium text-slate-700">Description</span>
               <input name="description" [(ngModel)]="milestoneModel.description" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
             </label>
           </div>
           <label for="milestone-photos" class="mt-3 block text-sm">
-            <span class="font-medium text-emerald-900">Photos (optional)</span>
-            <input id="milestone-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple (change)="onMilestonePhotosSelected($event)" class="mt-1 w-full text-sm text-emerald-900/70" />
+            <span class="font-medium text-slate-700">Photos (optional)</span>
+            <input id="milestone-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple (change)="onMilestonePhotosSelected($event)" class="mt-1 w-full text-sm text-slate-600" />
           </label>
           @if (milestonePhotoError()) {
-            <p class="mt-1 text-xs text-red-600">{{ milestonePhotoError() }}</p>
+            <p class="mt-1 text-xs text-red-600" role="alert">{{ milestonePhotoError() }}</p>
           }
           @if (milestonePreviews().length) {
             <ul class="mt-2 flex flex-wrap gap-2">
@@ -387,7 +454,7 @@ interface PreviewFile {
               }
             </ul>
           }
-          <button type="submit" class="mt-3 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50" [disabled]="addingMilestone()">
+          <button type="submit" class="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50" [disabled]="addingMilestone()">
             {{ addingMilestone() ? 'Saving...' : 'Add milestone' }}
           </button>
         </form>
@@ -407,6 +474,8 @@ export class RescueCaseDetailComponent implements OnInit, OnDestroy {
   readonly milestoneIcon = milestoneIcon;
   readonly statusClass = rescueStatusClass;
   readonly statusLabel = (status: RescueStatus) => RESCUE_STATUS_LABELS[status];
+  readonly statusDescription = (status: RescueStatus) => RESCUE_STATUS_DESCRIPTIONS[status];
+  readonly transitionHint = (status: RescueStatus) => RESCUE_STATUS_TRANSITION_HINTS[status];
   readonly typeLabel = (type: MilestoneType) => MILESTONE_TYPE_LABELS[type];
   readonly today = new Date().toISOString().slice(0, 10);
 
@@ -418,6 +487,7 @@ export class RescueCaseDetailComponent implements OnInit, OnDestroy {
   readonly editing = signal(false);
   readonly saving = signal(false);
   readonly updatingStatus = signal(false);
+  readonly pendingTransition = signal<RescueStatus | null>(null);
 
   readonly photoError = signal<string | null>(null);
   readonly photoPreviews = signal<PreviewFile[]>([]);
@@ -467,6 +537,24 @@ export class RescueCaseDetailComponent implements OnInit, OnDestroy {
   milestones(): RescueMilestone[] {
     const list = this.case()?.milestones ?? [];
     return [...list].sort((a, b) => a.occurred_at.localeCompare(b.occurred_at));
+  }
+
+  completeness(rescueCase: RescueCase): CompletenessItem[] {
+    const photos = rescueCase.photos ?? [];
+    const hasProgressUpdate = (rescueCase.milestones ?? []).some((m) => m.type !== 'rescue');
+    return [
+      { label: 'Named', done: !!rescueCase.name?.trim() },
+      { label: 'At least one photo', done: photos.length > 0 },
+      { label: 'Condition on rescue recorded', done: !!rescueCase.condition_on_rescue?.trim() },
+      { label: 'Description written', done: !!rescueCase.description?.trim() },
+      { label: 'Care notes recorded', done: !!rescueCase.care_notes?.trim() },
+      { label: 'Progress update added', done: hasProgressUpdate },
+    ];
+  }
+
+  completenessDone(): number {
+    const rescueCase = this.case();
+    return rescueCase ? this.completeness(rescueCase).filter((item) => item.done).length : 0;
   }
 
   private load(): void {
@@ -537,17 +625,32 @@ export class RescueCaseDetailComponent implements OnInit, OnDestroy {
   }
 
   // --- Status ---
-  changeStatus(status: RescueStatus): void {
+  requestTransition(status: RescueStatus): void {
+    this.error.set(null);
+    this.pendingTransition.set(status);
+  }
+
+  cancelTransition(): void {
+    this.pendingTransition.set(null);
+  }
+
+  confirmTransition(): void {
+    const status = this.pendingTransition();
+    if (!status) {
+      return;
+    }
     this.updatingStatus.set(true);
     this.error.set(null);
     this.rescue.updateStatus(this.caseId, status).subscribe({
       next: ({ data }) => {
         this.case.set(data);
         this.updatingStatus.set(false);
+        this.pendingTransition.set(null);
         this.flash(`Status moved to ${RESCUE_STATUS_LABELS[status]}.`);
       },
       error: (err) => {
         this.updatingStatus.set(false);
+        this.pendingTransition.set(null);
         this.error.set(errorMessage(err));
       },
     });
@@ -684,7 +787,7 @@ export class RescueCaseDetailComponent implements OnInit, OnDestroy {
 
   // --- Delete case ---
   deleteCase(): void {
-    if (!window.confirm('Delete this rescue case? This can be undone by an administrator.')) {
+    if (!window.confirm('Delete this rescue case? It will be removed from your workspace.')) {
       return;
     }
     this.rescue.deleteCase(this.caseId).subscribe({

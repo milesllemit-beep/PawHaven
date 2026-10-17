@@ -1,12 +1,7 @@
 import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import {
-  errorMessage,
-  formatBytes,
-  toFormData,
-  validateImageFiles,
-} from '../../core/media';
+import { errorMessage, formatBytes, toFormData, validateImageFiles } from '../../core/media';
 import { RescueService } from '../../core/rescue.service';
 
 interface PreviewFile {
@@ -24,188 +19,191 @@ const SPECIES_SUGGESTIONS = ['dog', 'cat', 'rabbit', 'bird', 'guinea pig', 'hams
       <a routerLink="/rescuer" class="text-sm text-emerald-700 hover:underline">
         &larr; Back to dashboard
       </a>
-      <h2 class="mt-3 text-2xl font-bold text-emerald-950">Report a Rescue</h2>
-      <p class="mt-1 text-sm text-emerald-900/60">
-        Document the details of the animal you rescued. This creates a rescue case you can
-        track on the Paw Progress Passport.
+      <h2 class="mt-3 text-2xl font-bold text-slate-800">Report a Rescue</h2>
+      <p class="mt-1 text-slate-500">
+        Document the animal you rescued. This creates a rescue case you can track on the Paw
+        Progress Passport. Fields marked * are required.
       </p>
 
       @if (error()) {
-        <p class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p>
+        <p class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+          {{ error() }}
+        </p>
       }
 
-      <form
-        class="mt-5 space-y-5 rounded-2xl bg-white p-6 shadow-sm"
-        (ngSubmit)="submit()"
-        novalidate
-      >
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label for="name" class="block text-sm font-medium text-emerald-900">
-              Name (optional)
-            </label>
-            <input
-              id="name"
-              name="name"
-              [(ngModel)]="model.name"
-              placeholder="Give the animal a name"
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            />
+      <form class="mt-5 space-y-6" (ngSubmit)="submit()" novalidate>
+        <!-- Animal details -->
+        <fieldset class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <legend class="px-1 text-sm font-semibold text-slate-800">Animal details</legend>
+          <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="name" class="block text-sm font-medium text-slate-700">Name (optional)</label>
+              <input
+                id="name"
+                name="name"
+                [(ngModel)]="model.name"
+                placeholder="Give the animal a name"
+                class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label for="species" class="block text-sm font-medium text-slate-700">Species *</label>
+              <input
+                id="species"
+                name="species"
+                [(ngModel)]="model.species"
+                required
+                list="species-suggestions"
+                placeholder="dog, cat, rabbit..."
+                class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+              <datalist id="species-suggestions">
+                @for (option of speciesSuggestions; track option) {
+                  <option [value]="option"></option>
+                }
+              </datalist>
+            </div>
+            <div>
+              <label for="breed" class="block text-sm font-medium text-slate-700">Breed (optional)</label>
+              <input
+                id="breed"
+                name="breed"
+                [(ngModel)]="model.breed"
+                class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label for="estimated_age_months" class="block text-sm font-medium text-slate-700">
+                Estimated age in months (optional)
+              </label>
+              <input
+                id="estimated_age_months"
+                type="number"
+                name="estimated_age_months"
+                [(ngModel)]="model.estimated_age_months"
+                min="0"
+                class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label for="sex" class="block text-sm font-medium text-slate-700">Sex</label>
+              <select
+                id="sex"
+                name="sex"
+                [(ngModel)]="model.sex"
+                class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              >
+                <option value="unknown">Unknown</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="species" class="block text-sm font-medium text-emerald-900">
-              Species *
-            </label>
-            <input
-              id="species"
-              name="species"
-              [(ngModel)]="model.species"
-              required
-              list="species-suggestions"
-              placeholder="dog, cat, rabbit..."
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-            />
-            <datalist id="species-suggestions">
-              @for (option of speciesSuggestions; track option) {
-                <option [value]="option"></option>
-              }
-            </datalist>
-          </div>
-          <div>
-            <label for="breed" class="block text-sm font-medium text-emerald-900">Breed</label>
-            <input
-              id="breed"
-              name="breed"
-              [(ngModel)]="model.breed"
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label for="estimated_age_months" class="block text-sm font-medium text-emerald-900">
-              Estimated age (months)
-            </label>
-            <input
-              id="estimated_age_months"
-              type="number"
-              name="estimated_age_months"
-              [(ngModel)]="model.estimated_age_months"
-              min="0"
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label for="sex" class="block text-sm font-medium text-emerald-900">Sex</label>
-            <select
-              id="sex"
-              name="sex"
-              [(ngModel)]="model.sex"
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-            >
-              <option value="unknown">Unknown</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-          </div>
-          <div>
-            <label for="rescued_at" class="block text-sm font-medium text-emerald-900">
-              Date rescued *
-            </label>
-            <input
-              id="rescued_at"
-              type="date"
-              name="rescued_at"
-              [(ngModel)]="model.rescued_at"
-              required
-              [max]="today"
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
-        </div>
+        </fieldset>
 
-        <div>
-          <label for="rescue_location" class="block text-sm font-medium text-emerald-900">
-            Rescue location *
-          </label>
-          <input
-            id="rescue_location"
-            name="rescue_location"
-            [(ngModel)]="model.rescue_location"
-            required
-            placeholder="Where did you find the animal?"
-            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-          />
-        </div>
+        <!-- Rescue details -->
+        <fieldset class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <legend class="px-1 text-sm font-semibold text-slate-800">Rescue details</legend>
+          <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="rescued_at" class="block text-sm font-medium text-slate-700">Date rescued *</label>
+              <input
+                id="rescued_at"
+                type="date"
+                name="rescued_at"
+                [(ngModel)]="model.rescued_at"
+                required
+                [max]="today"
+                class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label for="rescue_location" class="block text-sm font-medium text-slate-700">Rescue location *</label>
+              <input
+                id="rescue_location"
+                name="rescue_location"
+                [(ngModel)]="model.rescue_location"
+                required
+                placeholder="Where did you find the animal?"
+                class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+              <p class="mt-1 text-xs text-slate-400">
+                Kept private. Only you and administrators can see this; it is never shown publicly.
+              </p>
+            </div>
+          </div>
+          <div class="mt-4">
+            <label for="condition_on_rescue" class="block text-sm font-medium text-slate-700">
+              Condition on rescue (optional)
+            </label>
+            <textarea
+              id="condition_on_rescue"
+              name="condition_on_rescue"
+              [(ngModel)]="model.condition_on_rescue"
+              rows="2"
+              placeholder="Describe what you observed when you found the animal"
+              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+            ></textarea>
+            <p class="mt-1 text-xs text-slate-400">
+              Record only what you observed. Do not state medical conditions or treatments as
+              confirmed unless a veterinarian has verified them.
+            </p>
+          </div>
+        </fieldset>
 
-        <div>
-          <label for="condition_on_rescue" class="block text-sm font-medium text-emerald-900">
-            Condition on rescue
-          </label>
-          <textarea
-            id="condition_on_rescue"
-            name="condition_on_rescue"
-            [(ngModel)]="model.condition_on_rescue"
-            rows="2"
-            placeholder="Describe the animal's condition when you found it (facts only)"
-            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-          ></textarea>
-        </div>
-
-        <div>
-          <label for="description" class="block text-sm font-medium text-emerald-900">
-            Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            [(ngModel)]="model.description"
-            rows="3"
-            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-          ></textarea>
-        </div>
-
-        <div>
-          <label for="care_notes" class="block text-sm font-medium text-emerald-900">
-            Care notes (private)
-          </label>
-          <textarea
-            id="care_notes"
-            name="care_notes"
-            [(ngModel)]="model.care_notes"
-            rows="3"
-            placeholder="Internal notes for your team. These are not published publicly."
-            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-          ></textarea>
-          <p class="mt-1 text-xs text-emerald-900/50">
-            Private notes are only visible to you and administrators.
-          </p>
-        </div>
+        <!-- Description and notes -->
+        <fieldset class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <legend class="px-1 text-sm font-semibold text-slate-800">Notes</legend>
+          <div class="mt-3 space-y-4">
+            <div>
+              <label for="description" class="block text-sm font-medium text-slate-700">Description (optional)</label>
+              <textarea
+                id="description"
+                name="description"
+                [(ngModel)]="model.description"
+                rows="3"
+                class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              ></textarea>
+            </div>
+            <div>
+              <label for="care_notes" class="block text-sm font-medium text-slate-700">Care notes (optional, private)</label>
+              <textarea
+                id="care_notes"
+                name="care_notes"
+                [(ngModel)]="model.care_notes"
+                rows="3"
+                placeholder="Internal notes for your team. These are not published publicly."
+                class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              ></textarea>
+              <p class="mt-1 text-xs text-slate-400">Only visible to you and administrators.</p>
+            </div>
+          </div>
+        </fieldset>
 
         <!-- Photos -->
-        <div>
-          <label for="photos" class="block text-sm font-medium text-emerald-900">
-            Photos (JPEG, PNG, or WebP, up to 5 MB each)
+        <fieldset class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <legend class="px-1 text-sm font-semibold text-slate-800">Initial photos (optional)</legend>
+          <label for="photos" class="mt-3 block text-sm font-medium text-slate-700">
+            Add photos of the animal on rescue
           </label>
+          <p class="text-xs text-slate-400">JPEG, PNG or WebP, up to 5 MB each, maximum 10 photos.</p>
           <input
             id="photos"
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
             (change)="onFilesSelected($event)"
-            class="mt-1 w-full text-sm text-emerald-900/70"
+            class="mt-1 w-full text-sm text-slate-600"
           />
           @if (photoError()) {
-            <p class="mt-1 text-xs text-red-600">{{ photoError() }}</p>
+            <p class="mt-1 text-xs text-red-600" role="alert">{{ photoError() }}</p>
           }
 
           @if (previews().length) {
             <ul class="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
               @for (preview of previews(); track preview.url) {
                 <li class="relative">
-                  <img
-                    [src]="preview.url"
-                    [alt]="preview.file.name"
-                    class="h-24 w-full rounded-xl object-cover"
-                  />
+                  <img [src]="preview.url" [alt]="preview.file.name" class="h-24 w-full rounded-lg object-cover" />
                   <button
                     type="button"
                     (click)="removePreview(preview)"
@@ -214,25 +212,23 @@ const SPECIES_SUGGESTIONS = ['dog', 'cat', 'rabbit', 'bird', 'guinea pig', 'hams
                   >
                     ×
                   </button>
-                  <p class="mt-1 truncate text-xs text-emerald-900/50">
-                    {{ formatBytes(preview.file.size) }}
-                  </p>
+                  <p class="mt-1 truncate text-xs text-slate-400">{{ formatBytes(preview.file.size) }}</p>
                 </li>
               }
             </ul>
           }
-        </div>
+        </fieldset>
 
         <div class="flex items-center gap-3">
           <button
             type="submit"
-            class="rounded-xl bg-emerald-700 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-50"
+            class="rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
             [disabled]="submitting()"
           >
             {{ submitting() ? 'Saving rescue case...' : 'Save rescue case' }}
           </button>
           @if (submitting()) {
-            <span class="text-sm text-emerald-900/60" role="status">Uploading...</span>
+            <span class="text-sm text-slate-500" role="status">Uploading...</span>
           }
         </div>
       </form>

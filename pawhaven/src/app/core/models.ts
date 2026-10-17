@@ -202,6 +202,12 @@ export interface RescuerDashboard {
   }[];
 }
 
+export interface RescueCaseSummary {
+  total: number;
+  by_status: Record<RescueStatus, number>;
+  species: string[];
+}
+
 export interface AdminStats {
   users: { total: number; admins: number; rescuers: number; regular: number };
   animals: { total: number; available: number; pending: number; adopted: number };

@@ -6,9 +6,12 @@ import {
   Paginated,
   RescuerDashboard,
   RescueCase,
+  RescueCaseSummary,
   RescueMilestone,
   RescueStatus,
 } from './models';
+
+export type RescueCasePage = Paginated<RescueCase> & { summary?: RescueCaseSummary };
 
 export interface RescueCaseFilters {
   search?: string;
@@ -37,8 +40,8 @@ export class RescueService {
     return this.http.get<RescuerDashboard>(`${this.base}/dashboard`);
   }
 
-  listCases(filters: RescueCaseFilters = {}): Observable<Paginated<RescueCase>> {
-    return this.http.get<Paginated<RescueCase>>(`${this.base}/cases`, {
+  listCases(filters: RescueCaseFilters = {}): Observable<RescueCasePage> {
+    return this.http.get<RescueCasePage>(`${this.base}/cases`, {
       params: buildParams(filters),
     });
   }

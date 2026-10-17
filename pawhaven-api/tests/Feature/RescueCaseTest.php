@@ -160,6 +160,28 @@ class RescueCaseTest extends TestCase
             ->assertOk()->assertJsonCount(1, 'data');
     }
 
+    public function test_case_index_returns_a_scoped_summary_of_the_rescuers_cases(): void
+    {
+        $rescuer = User::factory()->rescuer()->create();
+        $other = User::factory()->rescuer()->create();
+
+        RescueCase::factory()->create(['rescuer_id' => $rescuer->id, 'status' => RescueCase::STATUS_IN_CARE, 'species' => 'dog']);
+        RescueCase::factory()->create(['rescuer_id' => $rescuer->id, 'status' => RescueCase::STATUS_IN_CARE, 'species' => 'cat']);
+        RescueCase::factory()->create(['rescuer_id' => $rescuer->id, 'status' => RescueCase::STATUS_ADOPTED, 'species' => 'dog']);
+        RescueCase::factory()->create(['rescuer_id' => $other->id, 'status' => RescueCase::STATUS_IN_CARE, 'species' => 'rabbit']);
+
+        // The summary ignores the active filter and reflects only this rescuer.
+        $this->actingAs($rescuer, 'sanctum')
+            ->getJson('/api/rescuer/cases?status=adopted')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('summary.total', 3)
+            ->assertJsonPath('summary.by_status.in_care', 2)
+            ->assertJsonPath('summary.by_status.adopted', 1)
+            ->assertJsonPath('summary.by_status.rescued', 0)
+            ->assertJsonPath('summary.species', ['cat', 'dog']);
+    }
+
     public function test_rescuer_can_view_and_update_their_own_case(): void
     {
         $rescuer = User::factory()->rescuer()->create();
